@@ -1,0 +1,1671 @@
+¡Entendido! Esto suena mucho mejor para darle esa entrada épica y narrativa al estilo Solo Leveling. Vamos a estructurarlo paso a paso.
+He tomado tu código base y he hecho las siguientes modificaciones para alinearnos con lo que pides:
+ * Pantalla de Introducción (Solo Imagen y Sonido):
+   * Una nueva pantalla inicial (intro-screen) con un fondo oscuro y tu imagen de "Solo Código" centrada.
+   * Reproducción automática del primer audio al aparecer esta pantalla.
+ * Transición Animada al Texto:
+   * Después de unos segundos (controlable con setTimeout), la imagen desaparece y el texto de bienvenida aparece con una animación.
+   * Se muestra el "Hola, soy Iris..." junto con las opciones "¿Estás listo para comenzar?" ("Sí" / "No").
+ * Flujo Condicional "Sí" / "No":
+   * Si el usuario selecciona "Sí":
+     * Se pasa a la pantalla de datos personales (nombre, edad).
+     * Luego, a la pantalla de advertencia de penitencias, explicando las consecuencias de no cumplir los retos.
+     * Si acepta la advertencia, se inicia la evaluación de programación con tus preguntas.
+   * Si el usuario selecciona "No":
+     * Se muestra un mensaje de despedida y se vuelve a la pantalla inicial.
+ * Integración de Preguntas:
+   * He creado un array de preguntas estructurado para HTML, CSS y JavaScript, usando las preguntas que me proporcionaste.
+   * La lógica de showQuestion, nextQuestion, prevQuestion y saveAnswer ha sido adaptada para trabajar con este nuevo array de preguntas y el flujo de los tests.
+   * Se muestra una pregunta a la vez, con navegación.
+   * Se implementa el temporizador para cada pregunta.
+   * El cálculo de resultados ahora usa las 15 preguntas (aunque solo 3 de cada una están implementadas por ahora).
+Notas Importantes:
+ * Imagen: Necesitarás reemplazar url('RUTA_A_TU_IMAGEN.jpg') en el CSS de .intro-screen con la ruta real de tu imagen de "Solo Código" (la que te gustó con la cara seria y boca cerrada). No puedo incrustarla directamente aquí.
+ * Audios: He añadido un audio para la introducción (intro-audio) que deberás enlazar a la canción tipo Solo Leveling que quieres.
+ * Preguntas Completas: Solo he puesto la "Pregunta 1" de cada sección para la demostración, pero la estructura ya está lista para que agregues las 4 preguntas restantes en cada categoría (HTML, CSS, JS) en el array allQuestions.
+ * Persistencia: La carga/guardado de datos en localStorage (para nombre, edad, y respuestas) está incluida para simular la persistencia.
+ * Advertencia de Notificaciones/Alarmas: He añadido una pantalla para pedir activación de notificaciones/alarmas, alineado con tu plan.
+Aquí tienes el código HTML, CSS y JavaScript actualizado. Guárdalo como un solo archivo .html y reemplaza la ruta de la imagen y los audios para probarlo.
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solo Código - Evaluación de Nivel</title>
+    <style>
+        :root {
+            --primary-color: #4a00e0; /* Morado oscuro */
+            --secondary-color: #8e2de2; /* Morado más claro */
+            --dark-bg: #0a0a1a; /* Fondo muy oscuro */
+            --darker-bg: #050510; /* Fondo casi negro */
+            --text-color: #e0e0ff; /* Texto blanquecino */
+            --accent-color: #00f0ff; /* Azul cian brillante */
+            --correct-color: #00e676; /* Verde para correcto */
+            --wrong-color: #ff3d71; /* Rojo para incorrecto */
+            --warning-color: #ffa500; /* Naranja para advertencias */
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden; /* Para las partículas */
+        }
+        
+        .container {
+            background-color: var(--darker-bg);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.1);
+            width: 90%;
+            max-width: 700px;
+            position: relative;
+            z-index: 10;
+            border: 1px solid var(--primary-color);
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            z-index: 2;
+        }
+        
+        h1, h2, h3 {
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 3px;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+        }
+        
+        h3 {
+            font-size: 1.4rem;
+            color: var(--text-color);
+            margin-top: 25px;
+            border-left: 3px solid var(--accent-color);
+            padding-left: 10px;
+        }
+        
+        p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Intro Screen */
+        .intro-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--darker-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .intro-image-container {
+            width: 250px; /* Ajusta el tamaño de la imagen */
+            height: 250px;
+            background-image: url('URL_A_TU_IMAGEN_SOLO_CODIGO.jpg'); /* REEMPLAZA ESTA RUTA */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            animation: imageAppear 1.5s ease-out forwards;
+            opacity: 0;
+            transition: opacity 1s ease-out;
+        }
+
+        @keyframes imageAppear {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .intro-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-top: 30px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: textSlideIn 0.8s ease-out forwards;
+            animation-delay: 2s; /* Ajusta el retraso */
+        }
+
+        @keyframes textSlideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Welcome Screen (after intro) */
+        .welcome-screen-main { /* Renombrado para no confundir con intro */
+            text-align: center;
+        }
+        
+        .avatar {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 25px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 5px 20px rgba(74, 0, 224, 0.5);
+            animation: pulse 3s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .avatar::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            animation: rotate 10s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .avatar-inner {
+            width: 90%;
+            height: 90%;
+            background-color: var(--darker-bg);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+        
+        .avatar-inner::after {
+            content: 'IRIS';
+            color: var(--accent-color);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .welcome-text {
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--accent-color);
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(74, 0, 224, 0.5);
+            border-radius: 6px;
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+        
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--text-color);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-color), orange);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(74, 0, 224, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: all 0.5s ease;
+            z-index: -1;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .question-container {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary-color);
+            text-align: left;
+        }
+        
+        .question-text {
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+        
+        .code-block {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            margin: 15px 0;
+            overflow-x: auto;
+            border-left: 3px solid var(--secondary-color);
+            color: var(--text-color);
+        }
+        
+        .options-container {
+            margin-top: 20px;
+        }
+        
+        .option {
+            margin-bottom: 12px;
+            position: relative;
+        }
+        
+        .option input {
+            position: absolute;
+            opacity: 0;
+        }
+        
+        .option label {
+            display: block;
+            padding: 12px 15px 12px 45px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(74, 0, 224, 0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .option label:hover {
+            background-color: rgba(74, 0, 224, 0.1);
+        }
+        
+        .option input:checked + label {
+            background-color: rgba(74, 0, 224, 0.2);
+            border-color: var(--primary-color);
+        }
+        
+        .option label::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .option input:checked + label::before {
+            background-color: var(--primary-color);
+            box-shadow: inset 0 0 0 3px var(--darker-bg);
+        }
+        
+        .navigation-btns {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--primary-color);
+            z-index: 100;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        
+        .results-container {
+            text-align: center;
+        }
+        
+        .skill-meter {
+            margin: 30px 0;
+            text-align: left;
+        }
+        
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .skill-name {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+        
+        .skill-percent {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        
+        .meter {
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 5px;
+            transition: width 1s ease;
+        }
+        
+        .final-message {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: rgba(74, 0, 224, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-color);
+            text-align: left;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            border: 1px solid var(--primary-color);
+            display: none;
+            animation: slideDown 0.3s forwards, fadeOut 0.3s forwards 2.5s;
+        }
+        
+        @keyframes slideDown {
+            from { top: -100px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        /* Efectos especiales */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.5;
+            }
+            90% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                width: 98%;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .btn-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .navigation-btns {
+                flex-direction: column-reverse;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="notification" id="notification"></div>
+    
+    <audio id="intro-audio" src="https://www.soundjay.com/buttons/sounds/button-10.mp3" preload="auto"></audio> 
+    <audio id="audio-correcto" src="https://www.soundjay.com/buttons/sounds/button-09.mp3"></audio>
+    <audio id="audio-incorrecto" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>      
+    
+    <div class="screen intro-screen active">
+        <div class="intro-image-container"></div>
+        <p class="intro-text" style="display: none;">¿Estás listo para Despertar tu Código?</p>
+    </div>
+
+    <div class="container">
+        <div class="screen welcome-screen-main">
+            <div class="avatar">
+                <div class="avatar-inner"></div>
+            </div>
+            <h1>Sistema de Evaluación</h1>
+            <p class="welcome-text">
+                Hola, soy Iris. Te guiaré a través de esta evaluación para determinar tu nivel de habilidades. 
+                El sistema analizará tus conocimientos en HTML, CSS y JavaScript. 
+            </p>
+            <div class="btn-container">
+                <button class="btn btn-primary" id="start-evaluation-btn">Sí</button>
+                <button class="btn btn-secondary" id="cancel-evaluation-btn">No</button>
+            </div>
+        </div>
+        
+        <div class="screen name-screen">
+            <h2>Identificación del Usuario</h2>
+            <div class="form-group">
+                <label for="name-input">Nombre completo:</label>
+                <input type="text" id="name-input" placeholder="Ingresa tu nombre" autocomplete="off" value="">
+            </div>
+            <div class="btn-container">
+                <button class="btn btn-primary" id="name-submit">Continuar</button>
+                <button class="btn btn-secondary" id="name-back">Atrás</button>
+            </div>
+        </div>
+        
+        <div class="screen age-screen">
+            <h2>Datos del Evaluado</h2>
+            <p id="greeting"></p>
+            <div class="form-group">
+                <label for="age-input">Edad:</label>
+                <input type="number" id="age-input" placeholder="Ingresa tu edad" min="12" max="99" autocomplete="off" value="">
+            </div>
+            <div class="btn-container">
+                <button class="btn btn-primary" id="age-submit">Continuar</button>
+                <button class="btn btn-secondary" id="age-back">Atrás</button>
+            </div>
+        </div>
+
+        <div class="screen notifications-screen">
+            <h2>Notificaciones y Desafíos</h2>
+            <p class="welcome-text">
+                Para que puedas alcanzar la maestría, Solo Código te enviará alarmas y desafíos personalizados en tu tiempo libre. 
+                Esto asegurará que tu entrenamiento sea constante y efectivo.
+            </p>
+            <div class="btn-container">
+                <button class="btn btn-primary" id="enable-notifications-btn">Activar Notificaciones</button>
+                <button class="btn btn-secondary" id="skip-notifications-btn">Omitir</button>
+            </div>
+        </div>
+        
+        <div class="screen warning-screen">
+            <h2>¡Advertencia Importante: Las Consecuencias del Código!</h2>
+            <p class="welcome-text" style="color: var(--warning-color);">
+                En Solo Código, no cumplir los retos tiene **penitencias**. 
+                Si no completas una tarea, la página podría restringir ciertas funciones. 
+                Si acumulas **3 penitencias sin cumplir**, tu acceso será bloqueado temporalmente.
+                ¡Cada desafío es una oportunidad para crecer!
+            </p>
+            <div class="btn-container">
+                <button class="btn btn-warning" id="accept-warning-btn">Entendido y Acepto</button>
+                <button class="btn btn-secondary" id="decline-warning-btn">No Acepto (Salir)</button>
+            </div>
+        </div>
+
+        <div class="screen ready-screen">
+            <h2>Preparación para la Evaluación</h2>
+            <p>
+                La evaluación consta de 15 preguntas divididas en 3 secciones: HTML, CSS y JavaScript. 
+                Tendrás 1 minuto por pregunta. ¿Estás listo para comenzar tu Ascensión del Código?
+            </p>
+            <div class="btn-container">
+                <button class="btn btn-primary" id="start-test-btn">Iniciar Evaluación</button>
+                <button class="btn btn-secondary" id="ready-back">Atrás</button>
+            </div>
+        </div>
+        
+        <div class="screen questions-screen">
+            <div class="timer" id="timer">01:00</div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            
+            <div class="question-display" id="question-display">
+                </div>
+            
+            <div class="navigation-btns">
+                <button class="btn btn-secondary" id="prev-question-btn" style="display: none;">Atrás</button>
+                <button class="btn btn-primary" id="next-question-btn">Siguiente</button>
+            </div>
+        </div>
+        
+        <div class="screen results-screen">
+            <h1>Resultados de la Evaluación</h1>
+            <p>Estos son tus resultados basados en las respuestas proporcionadas:</p>
+            
+            <div class="skill-meter">
+                <div class="skill-header">
+                    <span class="skill-name">HTML</span>
+                    <span class="skill-percent" id="html-score">0%</span>
+                </div>
+                <div class="meter">
+                    <div class="meter-fill" id="html-level"></div>
+                </div>
+            </div>
+            
+            <div class="skill-meter">
+                <div class="skill-header">
+                    <span class="skill-name">CSS</span>
+                    <span class="skill-percent" id="css-score">0%</span>
+                </div>
+                <div class="meter">
+                    <div class="meter-fill" id="css-level"></div>
+                </div>
+            </div>
+            
+            <div class="skill-meter">
+                <div class="skill-header">
+                    <span class="skill-name">JavaScript</span>
+                    <span class="skill-percent" id="js-score">0%</span>
+                </div>
+                <div class="meter">
+                    <div class="meter-fill" id="js-level"></div>
+                </div>
+            </div>
+            
+            <div class="final-message" id="final-message">
+                <h3>Análisis de Resultados</h3>
+                <p id="result-text">Cargando análisis de tus habilidades...</p>
+            </div>
+            
+            <div class="btn-container">
+                <button class="btn btn-primary" id="restart-btn">Volver a Intentar</button>
+                <button class="btn btn-secondary" id="exit-results-btn">Salir</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Variables globales
+        let currentScreen = 'intro'; // Empieza en la nueva pantalla de intro
+        let userName = localStorage.getItem('soloCodeUserName') || '';
+        let userAge = localStorage.getItem('soloCodeUserAge') || '';
+        let timer;
+        let timeLeft = 60; // 1 minuto por pregunta
+        let currentTestIndex = 0; // 0: HTML, 1: CSS, 2: JS
+        let currentQuestionIndex = 0; // Índice de la pregunta actual dentro de la sección
+        let userAnswers = JSON.parse(localStorage.getItem('soloCodeUserAnswers')) || {};
+        
+        // Todas las preguntas estructuradas
+        const allQuestions = {
+            html: [
+                {
+                    id: 'html-q1',
+                    section: 'HTML',
+                    type: 'radio',
+                    question: 'Un desarrollador ha creado la siguiente estructura HTML para la sección principal de un blog, donde se muestra el título de la entrada, el autor y la fecha, seguido por el contenido.',
+                    code: `<div class="header-post">
+    <span class="post-title">Mi primera entrada de blog</span>
+    <span class="author-info">Por Juan Pérez</span>
+    <span class="date">15 de junio, 2024</span>
+</div>
+<div class="content">
+    <p>Este es el contenido de mi entrada...</p>
+</div>`,
+                    options: [
+                        'El problema principal es el uso de divs y spans en lugar de elementos semánticos como `article`, `header`, `h1`, `time`.',
+                        'La estructura semántica mejora el SEO y la accesibilidad para lectores de pantalla, pero el código mostrado es válido.',
+                        'No hay ningún problema con el código mostrado, es una práctica común.',
+                        'Solo se necesitan agregar atributos ARIA para mejorar la accesibilidad.'
+                    ],
+                    correctAnswerIndex: 0,
+                    explanation: 'El uso de `div` y `span` es genérico. Etiquetas semánticas como `<article>`, `<header>`, `<h1>`, `<time>`, `<p>` brindan significado al contenido y mejoran SEO y accesibilidad.'
+                },
+                {
+                    id: 'html-q2',
+                    section: 'HTML',
+                    type: 'radio',
+                    question: 'Necesitas crear un formulario simple para que los usuarios se registren, pidiendo su nombre de usuario (obligatorio), email (formato correcto y obligatorio) y una contraseña (mínimo 8 caracteres). ¿Cuál es el HTML más adecuado para el campo del Email?',
+                    code: null,
+                    options: [
+                        `<input type="text" id="email" name="email" required pattern="[^@]+@[^@]+\.[a-zA-Z]{2,6}">`,
+                        `<input type="email" id="email" name="email" required>`,
+                        `<input type="text" id="email" name="email" validate="email">`,
+                        `<input type="email" id="email" name="email" minlength="8">`
+                    ],
+                    correctAnswerIndex: 1,
+                    explanation: '`type="email"` activa la validación de formato de email, y `required` lo hace obligatorio. `minlength` es para la contraseña, no para el email.'
+                },
+                 {
+                    id: 'html-q3',
+                    section: 'HTML',
+                    type: 'radio',
+                    question: 'Estás construyendo una barra de navegación. Necesitas un enlace a "Acerca de nosotros" que se abra en una **nueva pestaña**. ¿Cuál es el código HTML correcto para este enlace?',
+                    code: null,
+                    options: [
+                        `<a href="/about.html">Acerca de nosotros</a>`,
+                        `<a href="/about.html" target="_blank">Acerca de nosotros</a>`,
+                        `<a href="/about.html" newtab>Acerca de nosotros</a>`,
+                        `<a href="/about.html" rel="noopener">Acerca de nosotros</a>`
+                    ],
+                    correctAnswerIndex: 1,
+                    explanation: 'El atributo `target="_blank"` se usa para abrir el enlace en una nueva pestaña. Se recomienda añadir `rel="noopener noreferrer"` por seguridad.'
+                },
+                {
+                    id: 'html-q4',
+                    section: 'HTML',
+                    type: 'radio',
+                    question: 'Quieres incrustar un video de YouTube en tu página. ¿Cuál de las siguientes etiquetas HTML es la más apropiada para esta tarea?',
+                    code: null,
+                    options: [
+                        `<video src="youtube.com/video" controls></video>`,
+                        `<embed src="youtube.com/video"></embed>`,
+                        `<iframe src="youtube.com/embed/VIDEO_ID" allowfullscreen></iframe>`,
+                        `<object data="youtube.com/video"></object>`
+                    ],
+                    correctAnswerIndex: 2,
+                    explanation: 'Para incrustar contenido externo como videos de YouTube, se utiliza comúnmente la etiqueta `<iframe>` con la URL de embed proporcionada por YouTube.'
+                },
+                {
+                    id: 'html-q5',
+                    section: 'HTML',
+                    type: 'radio',
+                    question: '¿Qué metaetiqueta es esencial en la sección `<head>` de una página HTML para asegurar que el contenido se vea correctamente en diferentes dispositivos (responsivo)?',
+                    code: null,
+                    options: [
+                        `<meta charset="UTF-8">`,
+                        `<meta name="description" content="Mi página.">`,
+                        `<meta name="viewport" content="width=device-width, initial-scale=1.0">`,
+                        `<meta http-equiv="X-UA-Compatible" content="ie=edge">`
+                    ],
+                    correctAnswerIndex: 2,
+                    explanation: 'La metaetiqueta `<meta name="viewport" content="width=device-width, initial-scale=1.0">` es crucial para el diseño responsivo, indicando al navegador cómo controlar las dimensiones y el escalado de la página.'
+                }
+            ],
+            css: [
+                {
+                    id: 'css-q1',
+                    section: 'CSS',
+                    type: 'radio',
+                    question: 'Tienes el siguiente HTML y CSS. ¿Qué color final tendrá el texto del enlace "Inicio" y por qué?',
+                    code: `&lt;header id="main-header"&gt;
+    &lt;nav&gt;
+        &lt;ul class="nav-list"&gt;
+            &lt;li class="nav-item"&gt;
+                &lt;a href="#" class="nav-link"&gt;Inicio&lt;/a&gt;
+            &lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/nav&gt;
+&lt;/header&gt;
+
+/* CSS */
+#main-header .nav-list .nav-item .nav-link { color: green; }
+.nav-list .nav-item .nav-link { color: red; }
+.nav-link { color: blue; }`,
+                    options: [
+                        'Verde, porque el selector con ID tiene mayor especificidad.',
+                        'Rojo, porque es el selector más largo con clases.',
+                        'Azul, porque es el selector más simple y se aplica primero.',
+                        'Depende del orden en que se carguen los estilos en el navegador.'
+                    ],
+                    correctAnswerIndex: 0,
+                    explanation: 'La especificidad se calcula por el número de IDs (100), Clases (10) y Elementos (1). El selector `#main-header .nav-list .nav-item .nav-link` tiene un ID (100), tres clases (30) y un elemento (1), sumando 131. Los otros tienen menos, por lo que el verde tiene la mayor especificidad.'
+                },
+                 {
+                    id: 'css-q2',
+                    section: 'CSS',
+                    type: 'radio',
+                    question: 'Un elemento `div` tiene `width: 200px; padding: 20px; border: 5px solid black;`. Si `box-sizing: content-box;` (por defecto) está aplicado, ¿cuál es el ancho total que ocupará el elemento en la página?',
+                    code: null,
+                    options: [
+                        '200px',
+                        '220px',
+                        '240px',
+                        '250px'
+                    ],
+                    correctAnswerIndex: 3,
+                    explanation: 'Con `content-box`, el ancho y alto solo incluyen el contenido. Padding y border se suman: 200px (width) + 20px (left padding) + 20px (right padding) + 5px (left border) + 5px (right border) = 250px.'
+                },
+                {
+                    id: 'css-q3',
+                    section: 'CSS',
+                    type: 'radio',
+                    question: '¿Qué propiedad CSS se utiliza para organizar elementos en una única dirección (fila o columna) y es ideal para componentes como barras de navegación o listas de ítems?',
+                    code: null,
+                    options: [
+                        '`display: grid;`',
+                        '`display: block;`',
+                        '`display: flex;`',
+                        '`position: absolute;`'
+                    ],
+                    correctAnswerIndex: 2,
+                    explanation: '`display: flex;` (Flexbox) está diseñado para maquetación en una sola dimensión (fila o columna), ideal para componentes. `display: grid;` es para maquetación bidimensional.'
+                },
+                {
+                    id: 'css-q4',
+                    section: 'CSS',
+                    type: 'radio',
+                    question: 'Tienes dos elementos superpuestos. ¿Qué propiedad CSS y con qué valor deberías aplicar a un elemento para posicionarlo de forma relativa a su posición normal en el flujo del documento, sin sacarlo de él?',
+                    code: null,
+                    options: [
+                        '`position: absolute;`',
+                        '`position: fixed;`',
+                        '`position: relative;`',
+                        '`position: sticky;`'
+                    ],
+                    correctAnswerIndex: 2,
+                    explanation: '`position: relative;` posiciona un elemento respecto a su posición original en el flujo normal, sin sacarlo de él. `absolute` y `fixed` sí lo sacan del flujo.'
+                },
+                {
+                    id: 'css-q5',
+                    section: 'CSS',
+                    type: 'radio',
+                    question: 'Quieres que un elemento cambie de color de fondo y tamaño suavemente cuando el usuario pase el cursor sobre él. ¿Qué propiedad CSS se utiliza para lograr esta animación fluida y automática?',
+                    code: null,
+                    options: [
+                        '`animation`',
+                        '`transform`',
+                        '`transition`',
+                        '`keyframes`'
+                    ],
+                    correctAnswerIndex: 2,
+                    explanation: '`transition` se usa para crear animaciones suaves y automáticas cuando una propiedad CSS cambia de valor (como en un `:hover`). `animation` se usa para animaciones más complejas con múltiples fotogramas clave.'
+                }
+            ],
+            js: [
+                {
+                    id: 'js-q1',
+                    section: 'JavaScript',
+                    type: 'radio',
+                    question: 'Tienes un botón con id="miBoton" y un párrafo con id="textoMensaje". Quieres que, al hacer clic en el botón, el texto del párrafo cambie a "¡Hola, Solo Código!" y el botón se deshabilite. ¿Cuál es la forma más idiomática y robusta de hacer esto en JavaScript (sin librerías como jQuery)?',
+                    code: null,
+                    options: [
+                        `document.getElementById('miBoton').onclick = function() {
+    document.getElementById('textoMensaje').innerText = '¡Hola, Solo Código!';
+    document.getElementById('miBoton').disabled = true;
+};`,
+                        `const boton = document.querySelector('#miBoton');
+const parrafo = document.querySelector('#textoMensaje');
+boton.addEventListener('click', () => {
+    parrafo.textContent = '¡Hola, Solo Código!';
+    boton.disabled = true;
+});`,
+                        `const boton = document.getElementsById('miBoton')[0];
+const parrafo = document.getElementsByTagName('p')[0];
+boton.addEventListener('click', () => {
+    parrafo.innerHTML = '¡Hola, Solo Código!';
+    boton.setAttribute('disabled', true);
+});`,
+                        `Las opciones A y B son correctas, siendo B la más moderna y recomendada.`
+                    ],
+                    correctAnswerIndex: 3,
+                    explanation: 'Ambas opciones A y B son válidas, pero la opción B (`addEventListener` y `textContent`) es la más moderna y recomendada por su flexibilidad y buenas prácticas (permite múltiples manejadores de eventos y es más seguro que `innerHTML` para texto plano).'
+                },
+                {
+                    id: 'js-q2',
+                    section: 'JavaScript',
+                    type: 'radio',
+                    question: 'Considera los siguientes fragmentos de código. ¿Cuál será el valor final de `resultado` en cada caso?',
+                    code: `let a = "5";
+let b = 10;
+let resultadoA = a + b;
+
+let x = "15";
+let y = "5";
+let resultadoB = x - y;
+
+let p = true;
+let q = 1;
+let resultadoC = p + q;`,
+                    options: [
+                        `resultadoA: "510", resultadoB: 10, resultadoC: 2`,
+                        `resultadoA: 15, resultadoB: "155", resultadoC: "true1"`,
+                        `resultadoA: "510", resultadoB: "10", resultadoC: "true1"`,
+                        `resultadoA: 15, resultadoB: 10, resultadoC: 2`
+                    ],
+                    correctAnswerIndex: 0,
+                    explanation: '`+` con un string concatena ("510"). `-` y `+` con booleanos fuerzan a números (15 - 5 = 10; true es 1, 1 + 1 = 2). Esto es coerción de tipos.'
+                },
+                {
+                    id: 'js-q3',
+                    section: 'JavaScript',
+                    type: 'radio',
+                    question: 'Considera el siguiente código. ¿Cuál de las siguientes afirmaciones es **verdadera** sobre el ámbito (scope) de las variables?',
+                    code: `let globalVar = "Soy global";
+
+function primeraFuncion() {
+    let localVar = "Soy local";
+    // console.log(globalVar);
+
+    function segundaFuncion() {
+        let innerVar = "Soy interna";
+        // console.log(localVar);
+        // console.log(globalVar);
+    }
+    segundaFuncion();
+    // console.log(innerVar); // Línea A
+}
+
+primeraFuncion();
+// console.log(localVar); // Línea B`,
+                    options: [
+                        '`globalVar` solo es accesible dentro de `primeraFuncion`.',
+                        '`innerVar` es accesible tanto en `primeraFuncion` como en `segundaFuncion`.',
+                        '`localVar` es accesible dentro de `primeraFuncion` y `segundaFuncion`, pero no fuera de `primeraFuncion`.',
+                        'Descomentar la "Línea A" y "Línea B" no causaría ningún error.'
+                    ],
+                    correctAnswerIndex: 2,
+                    explanation: '`globalVar` es global. `localVar` es local a `primeraFuncion` (y accesible en `segundaFuncion` por closure, pero no globalmente). `innerVar` es local a `segundaFuncion`. Las líneas comentadas A y B causarían `ReferenceError`.'
+                },
+                {
+                    id: 'js-q4',
+                    section: 'JavaScript',
+                    type: 'radio',
+                    question: 'Tienes una función asíncrona `obtenerDatosUsuario()` que devuelve una `Promise`. ¿Cuál es la forma más limpia y moderna de manejar su éxito y error utilizando `async/await`?',
+                    code: `function obtenerDatosUsuario() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const exito = true; 
+            if (exito) {
+                resolve({ id: 1, nombre: "Neo" });
+            } else {
+                reject("Error al obtener datos.");
+            }
+        }, 1000);
+    });
+}`,
+                    options: [
+                        `obtenerDatosUsuario().then(data => console.log(data)).catch(err => console.error(err));`,
+                        `(async () => {
+    try {
+        const datos = await obtenerDatosUsuario();
+        console.log(datos);
+    } catch (error) {
+        console.error(error);
+    }
+})();`,
+                        `function fetchData() {
+    let datos = obtenerDatosUsuario();
+    console.log(datos);
+}`,
+                        `Las opciones A y B son válidas, pero la opción B (`async/await`) es considerada la más limpia para el manejo de asincronía secuencial.`
+                    ],
+                    correctAnswerIndex: 3,
+                    explanation: 'Ambas opciones A (`.then/.catch`) y B (`async/await`) son válidas para manejar Promesas. `async/await` es una sintaxis más moderna y síncrona que mejora la legibilidad del código asíncrono, especialmente en secuencias de operaciones.'
+                },
+                {
+                    id: 'js-q5',
+                    section: 'JavaScript',
+                    type: 'radio',
+                    question: 'Dado el siguiente array de objetos: `const estudiantes = [{ nombre: "Ana", puntuacion: 85 }, { nombre: "Luis", puntuacion: 92 }];`. ¿Cómo obtendrías un nuevo array que contenga solo los nombres de los estudiantes (`["Ana", "Luis"]`)?',
+                    code: null,
+                    options: [
+                        `estudiantes.forEach(est => est.nombre);`,
+                        `estudiantes.map(est => est.nombre);`,
+                        `for (let i = 0; i < estudiantes.length; i++) { nombres.push(estudiantes[i].nombre); }`,
+                        `Las opciones B y C son correctas, siendo B la más concisa y funcional.`
+                    ],
+                    correctAnswerIndex: 3,
+                    explanation: '`map()` es el método de array funcional diseñado específicamente para transformar cada elemento de un array y devolver un nuevo array con los resultados. Un bucle `for` tradicional también funciona, pero `map()` es más conciso y expresivo para este caso.'
+                }
+            ]
+        };
+        
+        // Elementos del DOM (Actualizados y algunos renombrados)
+        const screens = {
+            intro: document.querySelector('.intro-screen'),
+            welcomeMain: document.querySelector('.welcome-screen-main'), // Renombrado
+            name: document.querySelector('.name-screen'),
+            age: document.querySelector('.age-screen'),
+            notifications: document.querySelector('.notifications-screen'), // Nueva pantalla
+            warning: document.querySelector('.warning-screen'), // Nueva pantalla
+            ready: document.querySelector('.ready-screen'),
+            questions: document.querySelector('.questions-screen'),
+            results: document.querySelector('.results-screen')
+        };
+        
+        const introElements = {
+            imageContainer: document.querySelector('.intro-image-container'),
+            text: document.querySelector('.intro-text')
+        };
+
+        const buttons = {
+            startEvaluation: document.getElementById('start-evaluation-btn'), // Nuevo
+            cancelEvaluation: document.getElementById('cancel-evaluation-btn'), // Nuevo
+            nameSubmit: document.getElementById('name-submit'),
+            nameBack: document.getElementById('name-back'),
+            ageSubmit: document.getElementById('age-submit'),
+            ageBack: document.getElementById('age-back'),
+            enableNotifications: document.getElementById('enable-notifications-btn'), // Nuevo
+            skipNotifications: document.getElementById('skip-notifications-btn'), // Nuevo
+            acceptWarning: document.getElementById('accept-warning-btn'), // Nuevo
+            declineWarning: document.getElementById('decline-warning-btn'), // Nuevo
+            startTest: document.getElementById('start-test-btn'), // Renombrado
+            readyBack: document.getElementById('ready-back'), // Nuevo
+            prevQuestion: document.getElementById('prev-question-btn'), // Nuevo
+            nextQuestion: document.getElementById('next-question-btn'), // Nuevo
+            restart: document.getElementById('restart-btn'),
+            exitResults: document.getElementById('exit-results-btn')
+        };
+        
+        const inputs = {
+            name: document.getElementById('name-input'),
+            age: document.getElementById('age-input')
+        };
+        
+        const elements = {
+            greeting: document.getElementById('greeting'),
+            timer: document.getElementById('timer'),
+            notification: document.getElementById('notification'),
+            progressBar: document.getElementById('progress-bar'),
+            questionDisplay: document.getElementById('question-display'), // Nuevo
+            htmlScore: document.getElementById('html-score'),
+            cssScore: document.getElementById('css-score'),
+            jsScore: document.getElementById('js-score'),
+            htmlLevel: document.getElementById('html-level'),
+            cssLevel: document.getElementById('css-level'),
+            jsLevel: document.getElementById('js-level'),
+            resultText: document.getElementById('result-text')
+        };
+
+        const audioElements = {
+            intro: document.getElementById('intro-audio'),
+            correct: document.getElementById('audio-correcto'),
+            incorrect: document.getElementById('audio-incorrecto')
+        };
+        
+        // Funciones de utilidad
+        function showNotification(message, type = 'info') {
+            elements.notification.textContent = message;
+            elements.notification.style.display = 'block';
+            elements.notification.style.backgroundColor = 'rgba(0, 0, 0, 0.9)'; // Default
+            elements.notification.style.borderColor = 'var(--primary-color)'; // Default
+
+            if (type === 'error') {
+                elements.notification.style.backgroundColor = 'rgba(255, 61, 113, 0.9)';
+                elements.notification.style.borderColor = 'var(--wrong-color)';
+            } else if (type === 'success') {
+                elements.notification.style.backgroundColor = 'rgba(0, 230, 118, 0.9)';
+                elements.notification.style.borderColor = 'var(--correct-color)';
+            } else if (type === 'warning') {
+                elements.notification.style.backgroundColor = 'rgba(255, 165, 0, 0.9)';
+                elements.notification.style.borderColor = 'var(--warning-color)';
+            }
+            
+            // Reiniciar animación
+            elements.notification.style.animation = 'none';
+            void elements.notification.offsetWidth; // Trigger reflow
+            elements.notification.style.animation = 'slideDown 0.3s forwards, fadeOut 0.3s forwards 2.5s';
+        }
+        
+        function changeScreen(newScreen) {
+            // Ocultar todas las pantallas
+            Object.values(screens).forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Mostrar la pantalla solicitada
+            screens[newScreen].classList.add('active');
+            currentScreen = newScreen;
+            
+            // Acciones específicas por pantalla
+            if (newScreen === 'name') {
+                inputs.name.value = userName; // Cargar valor si existe
+                inputs.name.focus();
+            } else if (newScreen === 'age') {
+                elements.greeting.textContent = `Hola ${userName},`;
+                inputs.age.value = userAge; // Cargar valor si existe
+                inputs.age.focus();
+            } else if (newScreen === 'questions') {
+                startTest();
+            } else if (newScreen === 'results') {
+                calculateResults();
+            } else {
+                // Si no es una pantalla de prueba, ocultar temporizador
+                elements.timer.style.display = 'none';
+                clearInterval(timer); // Asegurarse de que el timer se detenga
+            }
+        }
+        
+        function startTest() {
+            currentTestIndex = 0; // Iniciar con HTML
+            currentQuestionIndex = 0; // Primera pregunta de HTML
+            // Resetear respuestas del usuario si es un nuevo test, o cargar si existen
+            userAnswers = JSON.parse(localStorage.getItem('soloCodeUserAnswers')) || {}; 
+
+            elements.timer.style.display = 'block'; // Mostrar timer
+            showCurrentQuestion();
+            updateProgressBar();
+        }
+
+        function showCurrentQuestion() {
+            const currentSectionQuestions = Object.values(allQuestions)[currentTestIndex];
+            const questionData = currentSectionQuestions[currentQuestionIndex];
+
+            if (!questionData) {
+                // Si no hay más preguntas en esta sección, intentar la siguiente
+                currentTestIndex++;
+                currentQuestionIndex = 0;
+                if (currentTestIndex < Object.keys(allQuestions).length) {
+                    showCurrentQuestion(); // Llamada recursiva para la siguiente sección
+                } else {
+                    // Todas las secciones completadas
+                    clearInterval(timer);
+                    changeScreen('results');
+                    return;
+                }
+                return;
+            }
+
+            // Reiniciar el temporizador para la nueva pregunta
+            resetTimer();
+            startTimer();
+
+            // Construir el HTML de la pregunta
+            let questionHtml = `<h2>Evaluación de ${questionData.section}</h2>`;
+            questionHtml += `<div class="question-container" id="${questionData.id}">`;
+            questionHtml += `<h3>Pregunta ${currentQuestionIndex + 1}: ${questionData.section === 'HTML' ? 'Semántica y Accesibilidad' : questionData.section === 'CSS' ? 'Selectores y Especificidad' : 'Manipulación del DOM'}</h3>`; // Ajustar para cada pregunta
+            questionHtml += `<p class="question-text">${questionData.question}</p>`;
+            if (questionData.code) {
+                questionHtml += `<pre class="code-block">${questionData.code}</pre>`;
+            }
+            questionHtml += `<div class="options-container">`;
+            
+            questionData.options.forEach((option, index) => {
+                const optionId = `${questionData.id}-opt${index}`;
+                const checked = userAnswers[questionData.id] === index ? 'checked' : '';
+                questionHtml += `
+                    <div class="option">
+                        <input type="radio" id="${optionId}" name="${questionData.id}" value="${index}" ${checked}>
+                        <label for="${optionId}">${option}</label>
+                    </div>`;
+            });
+            questionHtml += `</div>`; // Cierra options-container
+            questionHtml += `</div>`; // Cierra question-container
+
+            elements.questionDisplay.innerHTML = questionHtml;
+
+            // Mostrar u ocultar botón 'Atrás'
+            if (currentTestIndex === 0 && currentQuestionIndex === 0) {
+                buttons.prevQuestion.style.display = 'none';
+            } else {
+                buttons.prevQuestion.style.display = 'block';
+            }
+
+            showNotification(`Pregunta de ${questionData.section}. Tienes ${timeLeft} segundos para responder.`, 'info');
+            readQuestion(questionData.question + (questionData.code ? " Código: " + questionData.code.replace(/\s+/g, ' ') : ''));
+        }
+        
+        function readQuestion(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Detener cualquier lectura previa
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'es-ES';
+                utterance.rate = 0.9;
+                
+                const voices = window.speechSynthesis.getVoices();
+                const spanishVoice = voices.find(voice => voice.lang.includes('es') || voice.lang.includes('es-ES'));
+                if (spanishVoice) {
+                    utterance.voice = spanishVoice;
+                }
+                
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+        
+        function resetTimer() {
+            clearInterval(timer);
+            timeLeft = 60;
+            updateTimerDisplay();
+        }
+        
+        function startTimer() {
+            updateTimerDisplay();
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    timeUp();
+                }
+            }, 1000);
+        }
+        
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            elements.timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 10) {
+                elements.timer.style.color = 'var(--wrong-color)';
+                elements.timer.style.borderColor = 'var(--wrong-color)';
+            } else {
+                elements.timer.style.color = 'var(--accent-color)';
+                elements.timer.style.borderColor = 'var(--primary-color)';
+            }
+        }
+        
+        function timeUp() {
+            showNotification("¡Tiempo agotado! Pasando a la siguiente pregunta...", 'warning');
+            saveAnswer(); // Guardar la respuesta actual (posiblemente nula)
+            nextQuestion();
+        }
+        
+        function saveAnswer() {
+            const currentSectionQuestions = Object.values(allQuestions)[currentTestIndex];
+            const questionData = currentSectionQuestions[currentQuestionIndex];
+            const selectedOption = document.querySelector(`input[name="${questionData.id}"]:checked`);
+            
+            userAnswers[questionData.id] = selectedOption ? parseInt(selectedOption.value) : null;
+            localStorage.setItem('soloCodeUserAnswers', JSON.stringify(userAnswers)); // Guardar en localStorage
+        }
+        
+        function nextQuestion() {
+            saveAnswer(); // Asegura que la respuesta actual se guarde
+
+            const currentSectionQuestions = Object.values(allQuestions)[currentTestIndex];
+            
+            if (currentQuestionIndex < currentSectionQuestions.length - 1) {
+                currentQuestionIndex++;
+            } else {
+                currentTestIndex++;
+                currentQuestionIndex = 0;
+            }
+
+            if (currentTestIndex < Object.keys(allQuestions).length) {
+                showCurrentQuestion();
+            } else {
+                // Fin del test
+                clearInterval(timer);
+                changeScreen('results');
+            }
+            updateProgressBar();
+        }
+        
+        function prevQuestion() {
+            saveAnswer(); // Asegura que la respuesta actual se guarde
+
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+            } else {
+                currentTestIndex--;
+                const prevSectionQuestions = Object.values(allQuestions)[currentTestIndex];
+                currentQuestionIndex = prevSectionQuestions.length - 1;
+            }
+
+            if (currentTestIndex >= 0) {
+                showCurrentQuestion();
+            } else {
+                // Ya en la primera pregunta de la primera sección
+                currentTestIndex = 0;
+                currentQuestionIndex = 0;
+                showNotification("Ya estás en la primera pregunta.", 'info');
+            }
+            updateProgressBar();
+        }
+        
+        function updateProgressBar() {
+            const totalSections = Object.keys(allQuestions).length;
+            let totalQuestionsCount = 0;
+            Object.values(allQuestions).forEach(section => {
+                totalQuestionsCount += section.length;
+            });
+
+            let answeredCount = 0;
+            for (const qId in userAnswers) {
+                if (userAnswers[qId] !== null && userAnswers[qId] !== undefined) {
+                    answeredCount++;
+                }
+            }
+
+            // Calcular el progreso como un porcentaje del total de preguntas respondidas
+            const progress = (answeredCount / totalQuestionsCount) * 100;
+            elements.progressBar.style.width = `${progress}%`;
+        }
+        
+        function calculateResults() {
+            let htmlCorrect = 0;
+            let cssCorrect = 0;
+            let jsCorrect = 0;
+            
+            let htmlTotal = allQuestions.html.length;
+            let cssTotal = allQuestions.css.length;
+            let jsTotal = allQuestions.js.length;
+
+            allQuestions.html.forEach(q => {
+                if (userAnswers[q.id] === q.correctAnswerIndex) {
+                    htmlCorrect++;
+                }
+            });
+            allQuestions.css.forEach(q => {
+                if (userAnswers[q.id] === q.correctAnswerIndex) {
+                    cssCorrect++;
+                }
+            });
+            allQuestions.js.forEach(q => {
+                if (userAnswers[q.id] === q.correctAnswerIndex) {
+                    jsCorrect++;
+                }
+            });
+            
+            const htmlScore = Math.round((htmlCorrect / htmlTotal) * 100);
+            const cssScore = Math.round((cssCorrect / cssTotal) * 100);
+            const jsScore = Math.round((jsCorrect / jsTotal) * 100);
+            const totalScore = Math.round(((htmlCorrect + cssCorrect + jsCorrect) / (htmlTotal + cssTotal + jsTotal)) * 100);
+            
+            // Actualizar la UI
+            elements.htmlScore.textContent = `${htmlScore}%`;
+            elements.cssScore.textContent = `${cssScore}%`;
+            elements.jsScore.textContent = `${jsScore}%`;
+            
+            elements.htmlLevel.style.width = `${htmlScore}%`;
+            elements.cssLevel.style.width = `${cssScore}%`;
+            elements.jsLevel.style.width = `${jsScore}%`;
+            
+            // Mostrar mensaje de resultado
+            let resultMessage = '';
+            
+            if (totalScore >= 90) {
+                resultMessage = `¡Excelente trabajo, ${userName}! Tu puntuación del ${totalScore}% demuestra un dominio avanzado en desarrollo web. Tienes un sólido conocimiento de HTML, CSS y JavaScript que te permitirá abordar proyectos complejos con confianza.`;
+            } else if (totalScore >= 70) {
+                resultMessage = `Buen trabajo, ${userName}. Con un ${totalScore}%, muestras un buen entendimiento de los conceptos fundamentales, pero hay áreas donde puedes mejorar. Sigue practicando y pronto alcanzarás un nivel avanzado.`;
+            } else if (totalScore >= 50) {
+                resultMessage = `${userName}, tu puntuación del ${totalScore}% indica que tienes algunos conocimientos básicos, pero necesitas reforzar varios conceptos. Te recomendamos estudiar más y practicar con ejercicios adicionales.`;
+            } else {
+                resultMessage = `Hemos detectado algunas áreas de oportunidad en tus conocimientos (${totalScore}%). No te desanimes, ${userName}, todos empezamos así. Te sugerimos comenzar con los fundamentos y avanzar gradualmente.`;
+            }
+            
+            elements.resultText.textContent = resultMessage;
+            
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(resultMessage);
+                utterance.lang = 'es-ES';
+                utterance.rate = 0.9;
+                
+                const voices = window.speechSynthesis.getVoices();
+                const spanishVoice = voices.find(voice => voice.lang.includes('es') || voice.lang.includes('es-ES'));
+                if (spanishVoice) {
+                    utterance.voice = spanishVoice;
+                }
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+        
+        // Crear partículas de fondo
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 30;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                const size = Math.random() * 3 + 1;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                particle.style.opacity = Math.random() * 0.5 + 0.1;
+                
+                const duration = Math.random() * 20 + 10;
+                particle.style.animationDuration = `${duration}s`;
+                
+                particle.style.animationDelay = `${Math.random() * 10}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // Event Listeners
+        // Intro Screen
+        function startIntro() {
+            audioElements.intro.play().catch(e => console.error("Error al reproducir audio:", e));
+            setTimeout(() => {
+                introElements.imageContainer.style.opacity = '0'; // Desvanecer imagen
+                setTimeout(() => {
+                    introElements.imageContainer.style.display = 'none'; // Ocultar después de desvanecer
+                    introElements.text.style.display = 'block'; // Mostrar texto
+                    introElements.text.style.animationPlayState = 'running'; // Iniciar animación del texto
+                    setTimeout(() => {
+                        changeScreen('welcomeMain'); // Pasar a la siguiente pantalla
+                        screens.intro.style.display = 'none'; // Ocultar pantalla de intro
+                    }, 3000); // Duración de animación del texto + un poco más
+                }, 1000); // Tiempo para desvanecer la imagen
+            }, 3000); // Duración que la imagen solo está visible con audio
+        }
+
+        // Welcome Main Screen
+        buttons.startEvaluation.addEventListener('click', () => {
+            changeScreen('name');
+        });
+        
+        buttons.cancelEvaluation.addEventListener('click', () => {
+            showNotification("Has decidido no comenzar. ¡Esperamos verte de nuevo pronto!", 'info');
+            setTimeout(() => {
+                changeScreen('intro'); // Volver a la pantalla de intro
+                location.reload(); // Recargar para reiniciar el flujo si es necesario
+            }, 2500);
+        });
+        
+        // Name Screen
+        buttons.nameSubmit.addEventListener('click', () => {
+            if (inputs.name.value.trim() === '') {
+                showNotification("Por favor, ingresa tu nombre.", 'error');
+                return;
+            }
+            userName = inputs.name.value.trim();
+            localStorage.setItem('soloCodeUserName', userName); // Guardar en localStorage
+            changeScreen('age');
+        });
+        
+        buttons.nameBack.addEventListener('click', () => {
+            changeScreen('welcomeMain');
+        });
+        
+        // Age Screen
+        buttons.ageSubmit.addEventListener('click', () => {
+            const age = parseInt(inputs.age.value);
+            if (isNaN(age) || age < 12 || age > 99) {
+                showNotification("Por favor, ingresa una edad válida entre 12 y 99 años.", 'error');
+                return;
+            }
+            userAge = age;
+            localStorage.setItem('soloCodeUserAge', userAge); // Guardar en localStorage
+            changeScreen('notifications'); // Siguiente pantalla
+        });
+        
+        buttons.ageBack.addEventListener('click', () => {
+            changeScreen('name');
+        });
+
+        // Notifications Screen
+        buttons.enableNotifications.addEventListener('click', () => {
+            // Aquí iría la lógica real para pedir permisos de notificación
+            showNotification("¡Notificaciones activadas! Te mantendremos al tanto de tus desafíos.", 'success');
+            // Después de un breve mensaje, pasar a la advertencia
+            setTimeout(() => changeScreen('warning'), 2000);
+        });
+
+        buttons.skipNotifications.addEventListener('click', () => {
+            showNotification("Notificaciones omitidas. Puedes activarlas más tarde.", 'info');
+            // Después de un breve mensaje, pasar a la advertencia
+            setTimeout(() => changeScreen('warning'), 2000);
+        });
+        
+        // Warning Screen
+        buttons.acceptWarning.addEventListener('click', () => {
+            showNotification("¡Aceptado! Prepárate para los desafíos.", 'success');
+            setTimeout(() => changeScreen('ready'), 2000);
+        });
+
+        buttons.declineWarning.addEventListener('click', () => {
+            showNotification("Has decidido no aceptar las condiciones. Volviendo al inicio.", 'info');
+            localStorage.clear(); // Limpiar datos si no acepta
+            setTimeout(() => {
+                changeScreen('intro');
+                location.reload(); // Recargar para un inicio limpio
+            }, 2500);
+        });
+
+        // Ready Screen
+        buttons.startTest.addEventListener('click', () => {
+            changeScreen('questions');
+        });
+
+        buttons.readyBack.addEventListener('click', () => {
+            changeScreen('notifications'); // Volver a la pantalla anterior
+        });
+        
+        // Question Navigation
+        buttons.nextQuestion.addEventListener('click', () => {
+            const currentSectionQuestions = Object.values(allQuestions)[currentTestIndex];
+            const questionData = currentSectionQuestions[currentQuestionIndex];
+            const selectedOption = document.querySelector(`input[name="${questionData.id}"]:checked`);
+            
+            if (!selectedOption && questionData.type === 'radio') { // Solo si es una pregunta de radio y no se ha seleccionado nada
+                showNotification("Por favor, selecciona una respuesta antes de continuar.", 'error');
+                // No avanzar si no hay selección
+            } else {
+                // Reproducir audio según la respuesta
+                const selectedAnswerIndex = parseInt(selectedOption ? selectedOption.value : -1);
+                if (selectedAnswerIndex === questionData.correctAnswerIndex) {
+                    audioElements.correct.play();
+                    showNotification("¡Respuesta Correcta!", 'success');
+                } else {
+                    audioElements.incorrect.play();
+                    showNotification("Respuesta Incorrecta. ¡Sigue practicando!", 'error');
+                }
+                
+                // Pequeño retraso para que se escuche el audio y se vea la notificación
+                setTimeout(() => {
+                    nextQuestion();
+                }, 1000); // Ajusta este tiempo si es necesario
+            }
+        });
+
+        buttons.prevQuestion.addEventListener('click', () => {
+            prevQuestion();
+        });
+        
+        // Resultados
+        buttons.restart.addEventListener('click', () => {
+            localStorage.removeItem('soloCodeUserAnswers'); // Limpiar respuestas para reiniciar
+            userName = localStorage.getItem('soloCodeUserName') || ''; // Cargar nombre si persiste
+            userAge = localStorage.getItem('soloCodeUserAge') || ''; // Cargar edad si persiste
+            changeScreen('welcomeMain'); // Volver al inicio después de la intro
+        });
+        
+        buttons.exitResults.addEventListener('click', () => {
+            showNotification("Gracias por usar Solo Código. ¡Hasta pronto!", 'info');
+            localStorage.clear(); // Limpiar todos los datos al salir definitivamente
+            setTimeout(() => {
+                changeScreen('intro'); // Volver a la pantalla de intro
+                location.reload(); // Recargar para un inicio limpio
+            }, 2500);
+        });
+        
+        // Permitir enviar formularios con Enter
+        inputs.name.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                buttons.nameSubmit.click();
+            }
+        });
+        
+        inputs.age.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                buttons.ageSubmit.click();
+            }
+        });
+        
+        // Inicialización al cargar la página
+        window.addEventListener('load', () => {
+            createParticles();
+            // Comienza la animación de la intro al cargar
+            startIntro();
+            
+            // Precargar voces para síntesis de voz (importante para que estén disponibles)
+            if ('speechSynthesis' in window) {
+                speechSynthesis.onvoiceschanged = function() {
+                    console.log("Voces disponibles para síntesis de voz cargadas.");
+                };
+            }
+        });
+
+    
